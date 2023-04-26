@@ -8,6 +8,7 @@ export const UnleashApiErrorTypes = [
     'FeatureHasTagError',
     'IncompatibleProjectError',
     'InvalidOperationError',
+    'InvalidTokenError',
     'MinimumOneEnvironmentError',
     'NameExistsError',
     'NoAccessError',
@@ -33,7 +34,6 @@ const UnleashApiErrorTypesWithExtraData = [
     'ValidationError',
     'AuthenticationRequired',
     'NoAccessError',
-    'InvalidTokenError',
 ] as const;
 
 const AllUnleashApiErrorTypes = [
@@ -129,8 +129,7 @@ type UnleashErrorData =
                     | 'ValidationError'
                     | 'BadDataError'
                     | 'BadRequestError'
-                    | 'MinimumOneEnvironmentError'
-                    | 'InvalidTokenError';
+                    | 'MinimumOneEnvironmentError';
                 details: [
                     ValidationErrorDescription,
                     ...ValidationErrorDescription[],
@@ -167,6 +166,10 @@ export class UnleashError extends Error {
         return `Get help for id ${this.id}`;
     }
 
+    additionalSerializedProps(): object {
+        return {};
+    }
+
     toJSON(): ApiErrorSchema {
         return {
             id: this.id,
@@ -174,6 +177,7 @@ export class UnleashError extends Error {
             message: this.message,
             details: [{ message: this.message, description: this.message }],
             ...this.additionalParameters,
+            ...this.additionalSerializedProps,
         };
     }
 
@@ -225,20 +229,12 @@ export const fromLegacyError = (e: Error): UnleashError => {
         });
     }
 
-    if (
-        [
-            'BadDataError',
-            'BadRequestError',
-            'InvalidTokenError',
-            'ValidationError',
-        ].includes(name)
-    ) {
+    if (['BadDataError', 'BadRequestError', 'ValidationError'].includes(name)) {
         return new UnleashError({
             name: name as
                 | 'ValidationError'
                 | 'BadRequestError'
-                | 'BadDataError'
-                | 'InvalidTokenError',
+                | 'BadDataError',
             message:
                 'Request validation failed: your request body failed to validate. Refer to the `details` list to see what happened.',
             details: [{ description: e.message, message: e.message }],
