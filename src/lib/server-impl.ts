@@ -130,6 +130,7 @@ async function createApp(
 }
 
 async function start(opts: IUnleashOptions = {}): Promise<IUnleash> {
+    process.env.TZ = 'UTC';
     const config = createConfig(opts);
     const logger = config.getLogger('server-impl.js');
 
